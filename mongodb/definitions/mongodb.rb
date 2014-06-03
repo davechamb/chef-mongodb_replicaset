@@ -87,7 +87,7 @@ define :mongodb_instance, :mongodb_type => "mongod" , :action => [:enable, :star
   template "#{node['mongodb']['defaults_dir']}/#{name}" do
     action :create
     cookbook node['mongodb']['template_cookbook']
-    source "mongodb.default.erb"
+    source "mongod.default.erb"
     group node['mongodb']['root_group']
     owner "root"
     mode "0644"

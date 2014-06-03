@@ -63,7 +63,7 @@ default[:mongodb][:ulimit][:processes] = 32000
 
 default[:mongodb][:init_dir] = "/etc/init.d"
 
-default[:mongodb][:init_script_template] = "mongodb.init.erb"
+default[:mongodb][:init_script_template] = "mongod.init.erb"
 
 case node['platform_family']
 when "freebsd"
