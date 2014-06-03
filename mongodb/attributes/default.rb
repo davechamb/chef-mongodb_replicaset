@@ -86,7 +86,7 @@ else
   default[:mongodb][:root_group] = "root"
   default[:mongodb][:package_name] = "mongodb-org"
   default[:mongodb][:apt_repo] = "debian-sysvinit"
-  default[:mongodb][:instance_name] = "mongodb"
+  default[:mongodb][:instance_name] = "mongod"
 
 end
 
