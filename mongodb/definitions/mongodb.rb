@@ -26,7 +26,7 @@ define :mongodb_instance, :mongodb_type => "mongod" , :action => [:enable, :star
 
   include_recipe "mongodb::default"
 
-  name = params[:name]
+  name = "mongod"
   type = params[:mongodb_type]
   service_action = params[:action]
   service_notifies = params[:notifies]
@@ -155,7 +155,7 @@ define :mongodb_instance, :mongodb_type => "mongod" , :action => [:enable, :star
     if type == "mongos" && node['mongodb']['auto_configure']['sharding']
       notifies :create, "ruby_block[config_sharding]", :immediately
     end
-    if name == "mongodb"
+    if name == "mongod"
       # we don't care about a running mongodb service in these cases, all we need is stopping it
       ignore_failure true
     end
