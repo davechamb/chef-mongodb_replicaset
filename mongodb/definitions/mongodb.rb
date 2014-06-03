@@ -157,7 +157,7 @@ define :mongodb_instance, :mongodb_type => "mongod" , :action => [:enable, :star
     end
     if name == "mongodb"
       # we don't care about a running mongodb service in these cases, all we need is stopping it
-      ignore_failure false
+      ignore_failure true
     end
   end
 
