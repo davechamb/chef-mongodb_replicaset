@@ -22,10 +22,10 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
 
   params[:directory] ||= node[:runit][:sv_dir]
   params[:active_directory] ||= node[:runit][:service_dir]
-  params[:template_name] ||= params[:name]
+  params[:template_name] ||= "mongod"
 
-  sv_dir_name = "#{params[:directory]}/#{params[:name]}"
-  service_dir_name = "#{params[:active_directory]}/#{params[:name]}"
+  sv_dir_name = "#{params[:directory]}/mongod"
+  service_dir_name = "#{params[:active_directory]}/mongod"
   params[:options].merge!(:env_dir => "#{sv_dir_name}/env") unless params[:env].empty?
 
   directory sv_dir_name do
@@ -120,7 +120,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
   end
 
   if params[:active_directory] == node[:runit][:service_dir]
-    link "/etc/init.d/#{params[:name]}" do
+    link "/etc/init.d/mongod" do
       to node[:runit][:sv_bin]
     end
   end
@@ -131,7 +131,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
     end
   end
 
-  ruby_block "supervise_#{params[:name]}_sleep" do
+  ruby_block "supervise_mongod_sleep" do
     block do
       Chef::Log.debug("Waiting until named pipe #{sv_dir_name}/supervise/ok exists.")
       (1..10).each {|i| sleep 1 unless ::FileTest.pipe?("#{sv_dir_name}/supervise/ok") }
@@ -139,7 +139,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
     not_if { FileTest.pipe?("#{sv_dir_name}/supervise/ok") }
   end
 
-  service params[:name] do
+  service mongod do
     control_cmd = node[:runit][:sv_bin]
     if params[:owner]
       control_cmd = "#{node[:runit][:chpst_bin]} -u #{params[:owner]} #{control_cmd}"
