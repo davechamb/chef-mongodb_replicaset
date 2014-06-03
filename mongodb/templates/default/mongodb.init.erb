@@ -36,32 +36,33 @@ DESC=database
 DAEMON=/usr/bin/mongod
 DAEMON_OPTS="--config /etc/mongodb.conf"
 
-ENABLE_MONGODB=yes
+ENABLE_MONGOD=yes
 
 NAME=<%= @provides %>
-
-<% if %w{ ubuntu debian }.include? node.platform -%>
-ulimit -f <%= node.mongodb.ulimit.file_size %>
-ulimit -t <%= node.mongodb.ulimit.cpu_time %>
-ulimit -v <%= node.mongodb.ulimit.virtual_memory %>
-ulimit -n <%= node.mongodb.ulimit.open_files %>
-ulimit -m <%= node.mongodb.ulimit.memory_size %>
-ulimit -p <%= node.mongodb.ulimit.processes %>
-<% end -%>
 
 # Include mongodb defaults if available
 if [ -f /etc/default/$NAME ] ; then
 	. /etc/default/$NAME
 fi
 
-PIDFILE=/var/run/$NAME.pid
+# Handle NUMA access to CPUs (SERVER-3574)
+# This verifies the existence of numactl as well as testing that the command works
+NUMACTL_ARGS="--interleave=all"
+if which numactl >/dev/null 2>/dev/null && numactl $NUMACTL_ARGS ls / >/dev/null 2>/dev/null
+then
+    NUMACTL="`which numactl` -- $NUMACTL_ARGS"
+    DAEMON_OPTS=${DAEMON_OPTS:-"--config $CONF"}
+else
+    NUMACTL=""
+    DAEMON_OPTS="-- "${DAEMON_OPTS:-"--config $CONF"}
+fi
 
 if test ! -x $DAEMON; then
     echo "Could not find $DAEMON"
     exit 0
 fi
 
-if test "x$ENABLE_MONGODB" != "xyes"; then
+if test "x$ENABLE_MONGOD" != "xyes"; then
     exit 0
 fi
 
@@ -110,7 +111,25 @@ running() {
 }
 
 start_server() {
-# Start the process using the wrapper
+# Recommended ulimit values for mongod or mongos
+            # See http://docs.mongodb.org/manual/reference/ulimit/#recommended-settings
+            #
+            ulimit -f unlimited
+            ulimit -t unlimited
+            ulimit -v unlimited
+            ulimit -n 64000
+            ulimit -m unlimited
+
+            # In dash, ulimit takes -p for maximum user processes
+            # In bash, it's -u
+            if readlink /proc/$$/exe | grep -q dash
+            then
+                    ulimit -p 32000
+            else
+                    ulimit -u 32000
+            fi
+
+            # Start the process using the wrapper
             start-stop-daemon --background --start --quiet --pidfile $PIDFILE \
                         --make-pidfile --chuid $DAEMONUSER \
                         --exec $DAEMON -- $DAEMON_OPTS
